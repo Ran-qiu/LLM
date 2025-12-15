@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_active_user, get_current_superuser
 from app.schemas.user import UserResponse, UserUpdate
+from app.schemas.api_key import APIKeyCreate, APIKeyUpdate, APIKeyResponse
 from app.services.user_service import UserService
+from app.services.api_key_service import APIKeyService
 from app.models.user import User
 
 router = APIRouter()
@@ -144,3 +146,98 @@ async def activate_user(
 
     updated_user = UserService.activate_user(db, user)
     return updated_user
+
+
+# API Key management endpoints
+@router.get("/me/api-keys", response_model=List[APIKeyResponse])
+async def get_user_api_keys(
+    provider: str = None,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's API keys.
+
+    - **provider**: Filter by provider (optional)
+    """
+    api_keys = APIKeyService.get_api_keys(
+        db, current_user.id, provider=provider
+    )
+    return api_keys
+
+
+@router.post("/me/api-keys", response_model=APIKeyResponse, status_code=status.HTTP_201_CREATED)
+async def create_api_key(
+    api_key_data: APIKeyCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Add a new API key for LLM provider.
+
+    - **provider**: Provider name (openai, claude, gemini, ollama, custom)
+    - **name**: Friendly name for this key
+    - **api_key**: API key (optional for Ollama)
+    - **custom_config**: Custom configuration (e.g., base_url for custom providers)
+    """
+    api_key = APIKeyService.create_api_key(
+        db, current_user.id, api_key_data
+    )
+    return api_key
+
+
+@router.get("/me/api-keys/{api_key_id}", response_model=APIKeyResponse)
+async def get_api_key(
+    api_key_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get specific API key details."""
+    api_key = APIKeyService.get_api_key(db, api_key_id, current_user.id)
+
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found"
+        )
+
+    return api_key
+
+
+@router.put("/me/api-keys/{api_key_id}", response_model=APIKeyResponse)
+async def update_api_key(
+    api_key_id: int,
+    api_key_update: APIKeyUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update API key."""
+    api_key = APIKeyService.update_api_key(
+        db, api_key_id, current_user.id, api_key_update
+    )
+    return api_key
+
+
+@router.delete("/me/api-keys/{api_key_id}")
+async def delete_api_key(
+    api_key_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete API key."""
+    APIKeyService.delete_api_key(db, api_key_id, current_user.id)
+    return {"message": "API key deleted successfully"}
+
+
+@router.post("/me/api-keys/{api_key_id}/toggle", response_model=APIKeyResponse)
+async def toggle_api_key(
+    api_key_id: int,
+    is_active: bool,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Enable or disable an API key."""
+    api_key = APIKeyService.toggle_api_key(
+        db, api_key_id, current_user.id, is_active
+    )
+    return api_key
