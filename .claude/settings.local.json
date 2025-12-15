@@ -11,7 +11,8 @@
       "Bash(pip --version:*)",
       "Bash(py:*)",
       "Bash(git check-ignore:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n完成项目基础框架搭建 (Phase 1.1)\n\n- 前端: 创建 React + Vite + TypeScript 项目\n  * 配置 Ant Design UI 组件库\n  * 设置路由 (React Router v6)\n  * 配置代理到后端 API\n  * 创建基础目录结构\n\n- 后端: 创建 FastAPI + Python 项目  \n  * 配置项目结构和路由\n  * 创建基础 API 端点 (auth, chat, models, users, n8n)\n  * 配置环境变量管理\n  * 添加 CORS 中间件\n\n- 配置: 添加 Docker Compose、文档、依赖管理\n  * docker-compose.yml (backend, frontend, n8n, ollama)\n  * requirements.txt (FastAPI, LangChain, Ollama, LLM SDKs)\n  * .gitignore (保护敏感文件)\n  * 开发文档和任务清单\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }

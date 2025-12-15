@@ -26,6 +26,8 @@ ENV/
 
 # FastAPI / Uvicorn
 *.log
+logs/
+backend/logs/
 
 # Database
 *.db

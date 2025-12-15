@@ -1,0 +1,10 @@
+Generic single-database configuration with an async dbapi.
+
+To run migrations:
+1. Make sure you're in the backend directory
+2. Run: alembic upgrade head
+
+To create a new migration:
+1. Run: alembic revision --autogenerate -m "description"
+2. Review the generated migration file
+3. Run: alembic upgrade head
