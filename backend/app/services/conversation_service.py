@@ -475,3 +475,126 @@ class ConversationService:
             "format": "markdown",
             "content": markdown_content
         }
+
+    @staticmethod
+    def delete_message(
+        db: Session,
+        message_id: int,
+        user_id: int,
+        delete_subsequent: bool = False
+    ) -> bool:
+        """
+        Delete a message and optionally all subsequent messages.
+
+        Args:
+            db: Database session
+            message_id: Message ID to delete
+            user_id: User ID for ownership validation
+            delete_subsequent: If True, delete all messages after this one
+
+        Returns:
+            True if deleted
+
+        Raises:
+            HTTPException: If message not found or unauthorized
+        """
+        # Get message and verify ownership
+        message = db.query(Message).join(
+            Conversation,
+            Message.conversation_id == Conversation.id
+        ).filter(
+            Message.id == message_id,
+            Conversation.user_id == user_id
+        ).first()
+
+        if not message:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Message not found"
+            )
+
+        conversation_id = message.conversation_id
+
+        if delete_subsequent:
+            # Delete this message and all subsequent ones
+            # Get all messages in the conversation ordered by creation time
+            all_messages = db.query(Message).filter(
+                Message.conversation_id == conversation_id
+            ).order_by(Message.created_at.asc()).all()
+
+            # Find the index of the target message
+            delete_from_index = None
+            for idx, msg in enumerate(all_messages):
+                if msg.id == message_id:
+                    delete_from_index = idx
+                    break
+
+            if delete_from_index is not None:
+                # Delete all messages from this point onward
+                messages_to_delete = all_messages[delete_from_index:]
+                for msg in messages_to_delete:
+                    db.delete(msg)
+
+                logger.info(
+                    f"Deleted {len(messages_to_delete)} messages from "
+                    f"conversation {conversation_id} starting from message {message_id}"
+                )
+        else:
+            # Delete only this specific message
+            db.delete(message)
+            logger.info(f"Deleted message {message_id}")
+
+        db.commit()
+        return True
+
+    @staticmethod
+    def edit_message(
+        db: Session,
+        message_id: int,
+        user_id: int,
+        new_content: str
+    ) -> Message:
+        """
+        Edit a message content.
+
+        Args:
+            db: Database session
+            message_id: Message ID to edit
+            user_id: User ID for ownership validation
+            new_content: New message content
+
+        Returns:
+            Updated message object
+
+        Raises:
+            HTTPException: If message not found, unauthorized, or not a user message
+        """
+        # Get message and verify ownership
+        message = db.query(Message).join(
+            Conversation,
+            Message.conversation_id == Conversation.id
+        ).filter(
+            Message.id == message_id,
+            Conversation.user_id == user_id
+        ).first()
+
+        if not message:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Message not found"
+            )
+
+        # Only allow editing user messages
+        if message.role != "user":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only user messages can be edited"
+            )
+
+        # Update content
+        message.content = new_content
+        db.commit()
+        db.refresh(message)
+
+        logger.info(f"Message {message_id} edited")
+        return message

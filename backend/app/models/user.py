@@ -24,6 +24,7 @@ class User(Base):
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     tags = relationship("Tag", back_populates="user", cascade="all, delete-orphan")
     shares = relationship("Share", back_populates="user", cascade="all, delete-orphan")
+    templates = relationship("Template", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"

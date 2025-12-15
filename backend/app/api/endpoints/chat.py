@@ -15,6 +15,8 @@ from app.schemas.message import MessageResponse, ChatCompletionRequest, ChatComp
 from app.services.conversation_service import ConversationService
 from app.services.llm_service import LLMService
 from app.models.user import User
+from app.models.message import Message
+from app.models.conversation import Conversation
 
 router = APIRouter()
 
@@ -243,3 +245,125 @@ async def export_conversation(
         db, conversation_id, current_user.id, format
     )
     return export_data
+
+
+# Message editing and management
+@router.put("/messages/{message_id}", response_model=MessageResponse)
+async def edit_message(
+    message_id: int,
+    content: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Edit a user message.
+
+    - **content**: New message content
+
+    Only user messages can be edited. System and assistant messages cannot be modified.
+    """
+    message = ConversationService.edit_message(
+        db, message_id, current_user.id, content
+    )
+    return message
+
+
+@router.delete("/messages/{message_id}")
+async def delete_message(
+    message_id: int,
+    delete_subsequent: bool = False,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a message.
+
+    - **delete_subsequent**: If true, also delete all messages after this one
+
+    Useful for pruning conversation history or removing unwanted responses.
+    """
+    ConversationService.delete_message(
+        db, message_id, current_user.id, delete_subsequent
+    )
+    return {"message": "Message deleted successfully"}
+
+
+@router.post("/messages/{message_id}/regenerate", response_model=ChatCompletionResponse)
+async def regenerate_response(
+    message_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Regenerate the assistant response after a specific user message.
+
+    This will:
+    1. Delete all messages after the specified message
+    2. Generate a new response from the LLM
+
+    The message_id should be a user message.
+    """
+    # Get the message and verify it's a user message
+    message = db.query(Message).join(
+        Conversation,
+        Message.conversation_id == Conversation.id
+    ).filter(
+        Message.id == message_id,
+        Conversation.user_id == current_user.id
+    ).first()
+
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found"
+        )
+
+    if message.role != "user":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only regenerate responses for user messages"
+        )
+
+    conversation_id = message.conversation_id
+
+    # Delete all messages after this one
+    all_messages = db.query(Message).filter(
+        Message.conversation_id == conversation_id
+    ).order_by(Message.created_at.asc()).all()
+
+    delete_from_index = None
+    for idx, msg in enumerate(all_messages):
+        if msg.id == message_id:
+            delete_from_index = idx + 1  # Delete from the next message
+            break
+
+    if delete_from_index is not None and delete_from_index < len(all_messages):
+        messages_to_delete = all_messages[delete_from_index:]
+        for msg in messages_to_delete:
+            db.delete(msg)
+        db.commit()
+
+    # Generate new response
+    response = await LLMService.chat(
+        db=db,
+        conversation_id=conversation_id,
+        user_message=message.content,
+        user_id=current_user.id
+    )
+
+    # Get the newly generated assistant message
+    messages = ConversationService.get_conversation_messages(
+        db, conversation_id, current_user.id, skip=0, limit=1
+    )
+
+    assistant_msg = None
+    for msg in reversed(messages):
+        if msg.role == "assistant":
+            assistant_msg = msg
+            break
+
+    return ChatCompletionResponse(
+        conversation_id=conversation_id,
+        message=assistant_msg,
+        usage=response.usage
+    )

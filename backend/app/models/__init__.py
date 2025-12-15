@@ -5,5 +5,6 @@ from app.models.conversation import Conversation
 from app.models.message import Message
 from app.models.tag import Tag
 from app.models.share import Share
+from app.models.template import Template
 
-__all__ = ["User", "APIKey", "Conversation", "Message", "Tag", "Share"]
+__all__ = ["User", "APIKey", "Conversation", "Message", "Tag", "Share", "Template"]
