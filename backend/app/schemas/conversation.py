@@ -1,6 +1,9 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
+
+if TYPE_CHECKING:
+    from app.schemas.tag import TagResponse
 
 
 class ConversationBase(BaseModel):
@@ -37,6 +40,7 @@ class ConversationResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     message_count: Optional[int] = None  # Can be populated separately
+    tags: List["TagResponse"] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,5 +54,12 @@ class ConversationListItem(BaseModel):
     updated_at: datetime
     message_count: int = 0
     last_message: Optional[str] = None
+    tags: List["TagResponse"] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Resolve forward references
+from app.schemas.tag import TagResponse  # noqa: E402
+ConversationResponse.model_rebuild()
+ConversationListItem.model_rebuild()

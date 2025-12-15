@@ -25,6 +25,7 @@ class Conversation(Base):
     user = relationship("User", back_populates="conversations")
     api_key = relationship("APIKey", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan", order_by="Message.created_at")
+    tags = relationship("Tag", secondary="conversation_tags", back_populates="conversations")
 
     def __repr__(self):
         return f"<Conversation(id={self.id}, title='{self.title}', model='{self.model}')>"

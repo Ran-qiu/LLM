@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import auth, chat, models, users, n8n
+from app.api.endpoints import auth, chat, models, users, n8n, statistics, tags
 
 
 api_router = APIRouter()
@@ -9,4 +9,6 @@ api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(models.router, prefix="/models", tags=["models"])
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
+api_router.include_router(statistics.router, prefix="/statistics", tags=["statistics"])
+api_router.include_router(tags.router, prefix="/tags", tags=["tags"])
 api_router.include_router(n8n.router, prefix="/n8n", tags=["n8n"])

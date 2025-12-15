@@ -1,7 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from fastapi import HTTPException, status
+import json
 
 from app.models.conversation import Conversation
 from app.models.message import Message
@@ -280,3 +281,197 @@ class ConversationService:
         ).offset(skip).limit(limit).all()
 
         return messages
+
+    @staticmethod
+    def search_messages(
+        db: Session,
+        user_id: int,
+        query: str,
+        conversation_id: Optional[int] = None,
+        skip: int = 0,
+        limit: int = 50
+    ) -> List[Message]:
+        """
+        Search messages by content.
+
+        Args:
+            db: Database session
+            user_id: User ID
+            query: Search query
+            conversation_id: Optional conversation ID to limit search
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+
+        Returns:
+            List of matching Message objects
+        """
+        # Base query - join with conversations to filter by user
+        search_query = db.query(Message).join(
+            Conversation,
+            Message.conversation_id == Conversation.id
+        ).filter(
+            Conversation.user_id == user_id,
+            Message.content.ilike(f"%{query}%")
+        )
+
+        # Filter by conversation if specified
+        if conversation_id:
+            search_query = search_query.filter(
+                Message.conversation_id == conversation_id
+            )
+
+        messages = search_query.order_by(
+            Message.created_at.desc()
+        ).offset(skip).limit(limit).all()
+
+        logger.info(
+            f"Search completed: query='{query}', "
+            f"results={len(messages)}, user_id={user_id}"
+        )
+
+        return messages
+
+    @staticmethod
+    def export_conversation(
+        db: Session,
+        conversation_id: int,
+        user_id: int,
+        format: str = "json"
+    ) -> Dict[str, Any]:
+        """
+        Export conversation in specified format.
+
+        Args:
+            db: Database session
+            conversation_id: Conversation ID
+            user_id: User ID for ownership validation
+            format: Export format (json or markdown)
+
+        Returns:
+            Dictionary with conversation data
+
+        Raises:
+            HTTPException: If conversation not found
+        """
+        # Get conversation
+        conversation = ConversationService.get_conversation(
+            db, conversation_id, user_id
+        )
+
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+
+        # Get all messages
+        messages = db.query(Message).filter(
+            Message.conversation_id == conversation_id
+        ).order_by(
+            Message.created_at.asc()
+        ).all()
+
+        if format == "json":
+            return ConversationService._export_as_json(conversation, messages)
+        elif format == "markdown":
+            return ConversationService._export_as_markdown(conversation, messages)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported format: {format}"
+            )
+
+    @staticmethod
+    def _export_as_json(
+        conversation: Conversation,
+        messages: List[Message]
+    ) -> Dict[str, Any]:
+        """Export conversation as JSON."""
+        return {
+            "conversation": {
+                "id": conversation.id,
+                "title": conversation.title,
+                "model": conversation.model,
+                "system_prompt": conversation.system_prompt,
+                "created_at": conversation.created_at.isoformat(),
+                "updated_at": conversation.updated_at.isoformat(),
+            },
+            "messages": [
+                {
+                    "id": msg.id,
+                    "role": msg.role,
+                    "content": msg.content,
+                    "created_at": msg.created_at.isoformat(),
+                    "tokens": {
+                        "prompt": msg.prompt_tokens,
+                        "completion": msg.completion_tokens,
+                        "total": msg.total_tokens,
+                    } if msg.total_tokens else None,
+                    "cost": msg.cost,
+                }
+                for msg in messages
+            ],
+            "statistics": {
+                "total_messages": len(messages),
+                "total_tokens": sum(msg.total_tokens or 0 for msg in messages),
+                "total_cost": sum(msg.cost or 0 for msg in messages),
+            }
+        }
+
+    @staticmethod
+    def _export_as_markdown(
+        conversation: Conversation,
+        messages: List[Message]
+    ) -> Dict[str, Any]:
+        """Export conversation as Markdown."""
+        lines = [
+            f"# {conversation.title}",
+            "",
+            f"**Model:** {conversation.model}",
+            f"**Created:** {conversation.created_at.strftime('%Y-%m-%d %H:%M:%S')}",
+            "",
+        ]
+
+        if conversation.system_prompt:
+            lines.extend([
+                "## System Prompt",
+                "",
+                conversation.system_prompt,
+                "",
+            ])
+
+        lines.append("## Conversation")
+        lines.append("")
+
+        for msg in messages:
+            if msg.role == "system":
+                continue
+
+            role_label = "**User:**" if msg.role == "user" else "**Assistant:**"
+            lines.extend([
+                f"### {role_label}",
+                "",
+                msg.content,
+                "",
+            ])
+
+        # Add statistics
+        total_tokens = sum(msg.total_tokens or 0 for msg in messages)
+        total_cost = sum(msg.cost or 0 for msg in messages)
+
+        lines.extend([
+            "---",
+            "",
+            "## Statistics",
+            "",
+            f"- **Total Messages:** {len(messages)}",
+            f"- **Total Tokens:** {total_tokens}",
+            f"- **Total Cost:** ${total_cost:.4f}",
+        ])
+
+        markdown_content = "\n".join(lines)
+
+        return {
+            "format": "markdown",
+            "content": markdown_content
+        }

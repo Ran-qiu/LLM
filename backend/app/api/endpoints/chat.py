@@ -199,3 +199,47 @@ async def stream_message(
         generate(),
         media_type="text/event-stream"
     )
+
+
+# Advanced features
+@router.get("/search", response_model=List[MessageResponse])
+async def search_messages(
+    query: str,
+    conversation_id: int = None,
+    skip: int = 0,
+    limit: int = 50,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Search messages by content.
+
+    - **query**: Search query string
+    - **conversation_id**: Optional conversation ID to limit search
+    - **skip**: Pagination offset
+    - **limit**: Max results (default 50)
+    """
+    messages = ConversationService.search_messages(
+        db, current_user.id, query, conversation_id, skip, limit
+    )
+    return messages
+
+
+@router.get("/conversations/{conversation_id}/export")
+async def export_conversation(
+    conversation_id: int,
+    format: str = "json",
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Export conversation in specified format.
+
+    - **format**: Export format (json or markdown)
+
+    Returns the conversation with all messages and statistics.
+    """
+    export_data = ConversationService.export_conversation(
+        db, conversation_id, current_user.id, format
+    )
+    return export_data
