@@ -5,6 +5,10 @@ import { Login, Register, PrivateRoute } from './components/Auth'
 import { MainLayout } from './components/Common'
 import ChatPage from './components/Chat/ChatPage'
 import { APIKeyManagement } from './components/Models'
+import { TagManagement } from './components/Tags'
+import { ShareManagement } from './components/Shares'
+import { TemplateManagement } from './components/Templates'
+import { StatisticsPage } from './components/Statistics'
 import './App.css'
 
 function App() {
@@ -50,7 +54,7 @@ function App() {
             element={
               <PrivateRoute>
                 <MainLayout>
-                  <div>Tags - Coming Soon</div>
+                  <TagManagement />
                 </MainLayout>
               </PrivateRoute>
             }
@@ -60,7 +64,17 @@ function App() {
             element={
               <PrivateRoute>
                 <MainLayout>
-                  <div>Templates - Coming Soon</div>
+                  <TemplateManagement />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/shares"
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <ShareManagement />
                 </MainLayout>
               </PrivateRoute>
             }
@@ -70,7 +84,7 @@ function App() {
             element={
               <PrivateRoute>
                 <MainLayout>
-                  <div>Statistics - Coming Soon</div>
+                  <StatisticsPage />
                 </MainLayout>
               </PrivateRoute>
             }

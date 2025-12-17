@@ -17,7 +17,10 @@
       "Bash(conda run:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\n完成用户认证系统实现 (Phase 2)\n\nPhase 2.1 - 认证服务:\n- 创建 AuthService 服务层\n  * 用户注册 (用户名/邮箱唯一性验证)\n  * 用户登录认证 (支持用户名或邮箱登录)\n  * JWT Token 生成和刷新\n  * 密码修改 (需验证旧密码)\n\nPhase 2.2 - 用户管理服务:\n- 创建 UserService 服务层\n  * 用户 CRUD 操作\n  * 用户激活/停用\n  * 分页查询\n\nPhase 2.3 - API 端点实现:\n- /api/v1/auth/register - 用户注册\n- /api/v1/auth/login - 用户登录 (OAuth2PasswordRequestForm)\n- /api/v1/auth/refresh - Token 刷新\n- /api/v1/auth/change-password - 修改密码\n- /api/v1/auth/me - 获取当前用户信息\n\n- /api/v1/users/me - 获取/更新/删除当前用户\n- /api/v1/users/ - 获取用户列表 (管理员)\n- /api/v1/users/{user_id} - 用户管理 (管理员)\n- /api/v1/users/{user_id}/activate - 激活用户 (管理员)\n- /api/v1/users/{user_id}/deactivate - 停用用户 (管理员)\n\n功能特性:\n- JWT 认证保护\n- 密码 bcrypt 加密\n- API key 加密存储\n- 结构化日志记录\n- 完整的错误处理\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(alembic current:*)",
+      "Bash(alembic history:*)",
+      "Bash(where:*)"
     ]
   }
 }

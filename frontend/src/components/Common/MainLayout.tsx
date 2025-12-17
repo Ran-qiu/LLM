@@ -46,6 +46,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
       label: '模板',
     },
     {
+      key: '/shares',
+      icon: <BarChartOutlined />,
+      label: '分享管理',
+    },
+    {
       key: '/statistics',
       icon: <BarChartOutlined />,
       label: '统计',
