@@ -26,6 +26,7 @@
 ## 支持的LLM厂商
 
 ### 云端API厂商
+
 - OpenAI (GPT-4, GPT-3.5)
 - Anthropic (Claude 3.5 Sonnet, Claude 3 Opus)
 - Google (Gemini Pro, Gemini Ultra)
@@ -38,9 +39,11 @@
 - DeepSeek
 
 ### 本地部署
+
 - **Ollama**: 支持 Llama 3、Mistral、Qwen、CodeLlama、Phi 等多种开源模型
 
 ### 自定义服务
+
 - 任何兼容 OpenAI API 格式的服务
 - OneAPI 多模型聚合网关
 - vLLM 高性能推理引擎
@@ -75,6 +78,7 @@ docker-compose up -d
 ### 本地开发
 
 #### 后端启动
+
 ```bash
 cd backend
 python -m venv venv
@@ -84,6 +88,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 #### 前端启动
+
 ```bash
 cd frontend
 npm install
@@ -95,6 +100,7 @@ npm run dev
 详细的开发文档请查看：[开发文档.md](./开发文档.md)
 
 文档包含：
+
 - 完整的系统架构设计（包含 n8n 工作流引擎）
 - 功能模块详细说明
 - 数据库设计（支持自定义模型配置）
@@ -123,6 +129,7 @@ npm run dev
 ## 贡献指南
 
 欢迎贡献代码、报告问题或提出建议。请确保：
+
 - 遵循项目的代码规范
 - 编写必要的测试
 - 提交前运行测试确保通过

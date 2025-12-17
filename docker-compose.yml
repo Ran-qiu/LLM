@@ -5,41 +5,51 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ../docker/Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: llm-backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./data:/app/data
-      - ./backend/.env:/app/.env
     environment:
-      - DATABASE_URL=sqlite:///./data/llm.db
+      # 开发环境密钥（生产环境请修改）
+      - SECRET_KEY=dev-secret-key-change-in-production-$(openssl rand -hex 32)
+      - ENCRYPTION_KEY=dev-encryption-key-change-in-production
+      - DATABASE_URL=sqlite:///./data/llm_manager.db
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://frontend
+      - LOG_LEVEL=INFO
       - N8N_WEBHOOK_URL=http://n8n:5678/webhook
       - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      # 持久化数据
+      - ./backend/data:/app/data
+      - ./backend/logs:/app/logs
     networks:
       - llm-network
     restart: unless-stopped
-    depends_on:
-      - n8n
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # 前端服务 - React
   frontend:
     build:
       context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:8000/api/v1
     container_name: llm-frontend
     ports:
-      - "80:80"
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8000
-      - VITE_N8N_URL=http://localhost:5678
+      - "5173:80"
     networks:
       - llm-network
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
-  # n8n 工作流自动化
+  # n8n 工作流自动化（可选，如不需要可删除）
   n8n:
     image: n8nio/n8n:latest
     container_name: llm-n8n
@@ -55,18 +65,15 @@ services:
       - WEBHOOK_URL=http://localhost:5678/
       - GENERIC_TIMEZONE=Asia/Shanghai
       - N8N_LOG_LEVEL=info
-      # 允许加载外部模块
-      - NODE_FUNCTION_ALLOW_EXTERNAL=*
-      # 自定义节点
-      - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./n8n/workflows:/home/node/.n8n/workflows
     networks:
       - llm-network
     restart: unless-stopped
+    profiles:
+      - full  # 仅在使用 --profile full 时启动
 
-  # Ollama 本地模型服务（可选）
+  # Ollama 本地模型服务（可选，如不需要可删除）
   ollama:
     image: ollama/ollama:latest
     container_name: llm-ollama
@@ -77,18 +84,10 @@ services:
     networks:
       - llm-network
     restart: unless-stopped
-    # 如果有 GPU，取消下面的注释
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    profiles:
+      - full  # 仅在使用 --profile full 时启动
 
 volumes:
-  # 应用数据
-  data:
   # n8n 数据
   n8n_data:
   # Ollama 模型数据

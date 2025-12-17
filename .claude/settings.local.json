@@ -20,7 +20,10 @@
       "Bash(git push:*)",
       "Bash(alembic current:*)",
       "Bash(alembic history:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(ls:*)",
+      "Bash(git checkout:*)",
+      "Bash(chmod:*)"
     ]
   }
 }

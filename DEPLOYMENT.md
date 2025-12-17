@@ -25,12 +25,14 @@
 ## 系统要求
 
 ### 最低配置
+
 - **CPU**: 2 核心
 - **内存**: 4GB RAM
 - **硬盘**: 20GB 可用空间
 - **操作系统**: Windows 10+, macOS 10.15+, Linux (Ubuntu 20.04+)
 
 ### 推荐配置
+
 - **CPU**: 4 核心或更多
 - **内存**: 8GB RAM 或更多
 - **硬盘**: 50GB SSD
@@ -45,6 +47,7 @@
 #### 1.1 安装 Python
 
 **Windows:**
+
 ```bash
 # 下载并安装 Python 3.9 或更高版本
 # https://www.python.org/downloads/
@@ -55,6 +58,7 @@ pip --version
 ```
 
 **Linux/macOS:**
+
 ```bash
 # Ubuntu/Debian
 sudo apt update
@@ -71,6 +75,7 @@ pip3 --version
 #### 1.2 安装 Node.js
 
 **Windows:**
+
 ```bash
 # 下载并安装 Node.js 18.x LTS
 # https://nodejs.org/
@@ -81,6 +86,7 @@ npm --version
 ```
 
 **Linux:**
+
 ```bash
 # 使用 NodeSource 安装
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -92,6 +98,7 @@ npm --version
 ```
 
 **macOS:**
+
 ```bash
 # 使用 Homebrew
 brew install node@18
@@ -116,6 +123,7 @@ cd LLM
 #### 2.1 创建虚拟环境
 
 **Windows:**
+
 ```bash
 cd backend
 python -m venv venv
@@ -123,6 +131,7 @@ venv\Scripts\activate
 ```
 
 **Linux/macOS:**
+
 ```bash
 cd backend
 python3 -m venv venv
@@ -138,6 +147,7 @@ pip install -r requirements.txt
 ```
 
 如果遇到依赖安装问题：
+
 ```bash
 # Windows 可能需要
 pip install --upgrade pip setuptools wheel
@@ -159,6 +169,7 @@ cp .env.example .env
 ```
 
 **必须配置的环境变量**：
+
 ```bash
 # JWT 密钥 (必须修改为随机字符串)
 SECRET_KEY=your-super-secret-key-change-this-in-production
@@ -177,6 +188,7 @@ LOG_LEVEL=INFO
 ```
 
 **生成安全的密钥**：
+
 ```bash
 # 使用 Python 生成随机密钥
 python -c "import secrets; print(secrets.token_urlsafe(32))"
@@ -199,6 +211,7 @@ alembic upgrade head
 ```
 
 成功后会看到：
+
 ```
 INFO  [alembic.runtime.migration] Running upgrade  -> 001, initial_schema
 INFO  [alembic.runtime.migration] Running upgrade 001 -> 002, add_phase5_features
@@ -207,12 +220,14 @@ INFO  [alembic.runtime.migration] Running upgrade 001 -> 002, add_phase5_feature
 #### 2.5 启动后端服务
 
 **开发模式**：
+
 ```bash
 # 确保在 backend 目录下
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **生产模式**：
+
 ```bash
 # 使用 gunicorn (推荐)
 pip install gunicorn
@@ -227,6 +242,7 @@ gunicorn app.main:app \
 ```
 
 验证后端是否启动成功：
+
 ```bash
 # 打开浏览器访问
 http://localhost:8000/docs
@@ -247,6 +263,7 @@ npm install
 ```
 
 如果遇到依赖安装问题：
+
 ```bash
 # 清理缓存后重试
 npm cache clean --force
@@ -266,6 +283,7 @@ cp .env.example .env
 ```
 
 **.env 配置**：
+
 ```bash
 # API 地址
 VITE_API_BASE_URL=http://localhost:8000/api/v1
@@ -277,12 +295,14 @@ VITE_APP_TITLE=LLM 管理平台
 #### 3.3 启动前端服务
 
 **开发模式**：
+
 ```bash
 # 确保在 frontend 目录下
 npm run dev
 ```
 
 成功后会看到：
+
 ```
   VITE v5.0.8  ready in 1234 ms
 
@@ -292,6 +312,7 @@ npm run dev
 ```
 
 **生产构建**：
+
 ```bash
 # 构建生产版本
 npm run build
@@ -309,8 +330,9 @@ serve -s dist -l 5173
 #### 4.1 访问应用
 
 打开浏览器访问：
-- **前端**: http://localhost:5173
-- **后端 API 文档**: http://localhost:8000/docs
+
+- **前端**: <http://localhost:5173>
+- **后端 API 文档**: <http://localhost:8000/docs>
 
 #### 4.2 测试基本功能
 
@@ -339,6 +361,7 @@ serve -s dist -l 5173
 #### 4.3 检查日志
 
 **后端日志**：
+
 ```bash
 # 查看实时日志
 tail -f backend/logs/app.log
@@ -348,6 +371,7 @@ tail -f backend/logs/error.log
 ```
 
 **前端日志**：
+
 - 打开浏览器开发者工具 (F12)
 - 查看 Console 标签页
 
@@ -360,6 +384,7 @@ tail -f backend/logs/error.log
 #### 1.1 安装 Docker
 
 **Windows:**
+
 ```bash
 # 下载并安装 Docker Desktop
 # https://www.docker.com/products/docker-desktop/
@@ -370,6 +395,7 @@ docker-compose --version
 ```
 
 **Linux (Ubuntu):**
+
 ```bash
 # 安装 Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -393,6 +419,7 @@ docker compose version
 ```
 
 **macOS:**
+
 ```bash
 # 下载并安装 Docker Desktop
 # https://www.docker.com/products/docker-desktop/
@@ -642,6 +669,7 @@ docker compose ps
 ```
 
 成功后会看到：
+
 ```
 NAME                IMAGE                 STATUS              PORTS
 llm-backend         llm-backend:latest    Up 30 seconds       0.0.0.0:8000->8000/tcp
@@ -670,9 +698,9 @@ docker compose down -v
 
 访问以下地址验证部署：
 
-- **前端应用**: http://localhost:5173
-- **后端 API 文档**: http://localhost:8000/docs
-- **健康检查**: http://localhost:8000/health
+- **前端应用**: <http://localhost:5173>
+- **后端 API 文档**: <http://localhost:8000/docs>
+- **健康检查**: <http://localhost:8000/health>
 
 ---
 
@@ -701,11 +729,13 @@ docker compose down -v
 ### 数据库配置
 
 #### SQLite (默认)
+
 ```bash
 DATABASE_URL=sqlite:///./data/llm_manager.db
 ```
 
 #### PostgreSQL (生产推荐)
+
 ```bash
 # 安装 PostgreSQL 驱动
 pip install psycopg2-binary
@@ -723,6 +753,7 @@ DATABASE_URL=postgresql://username:password@localhost:5432/llm_manager
 **问题**: `ModuleNotFoundError: No module named 'xxx'`
 
 **解决**:
+
 ```bash
 # 确保虚拟环境已激活
 source venv/bin/activate  # Linux/macOS
@@ -739,6 +770,7 @@ pip install -r requirements.txt
 **问题**: `alembic.util.exc.CommandError`
 
 **解决**:
+
 ```bash
 # 检查 alembic 配置
 cat alembic.ini
@@ -757,6 +789,7 @@ alembic upgrade head
 **问题**: 前端请求返回 CORS 错误
 
 **解决**:
+
 1. 检查后端 `.env` 中的 `ALLOWED_ORIGINS`
 2. 确保包含前端地址：`http://localhost:5173`
 3. 重启后端服务
@@ -768,6 +801,7 @@ alembic upgrade head
 **问题**: 容器启动后立即退出
 
 **解决**:
+
 ```bash
 # 查看详细日志
 docker compose logs backend
@@ -792,6 +826,7 @@ ports:
 **问题**: 添加 API Key 时报错
 
 **解决**:
+
 ```bash
 # 生成新的加密密钥
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
@@ -809,6 +844,7 @@ ENCRYPTION_KEY=生成的密钥
 **问题**: `npm run build` 失败
 
 **解决**:
+
 ```bash
 # 清理缓存
 npm cache clean --force
@@ -930,6 +966,7 @@ WantedBy=multi-user.target
 ```
 
 启用服务：
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable llm-backend
@@ -940,6 +977,7 @@ sudo systemctl status llm-backend
 ### 5. 监控和日志
 
 **日志管理**:
+
 ```bash
 # 使用 logrotate
 sudo nano /etc/logrotate.d/llm-manager
@@ -959,6 +997,7 @@ sudo nano /etc/logrotate.d/llm-manager
 ```
 
 **性能监控**:
+
 ```bash
 # 安装监控工具
 pip install prometheus-fastapi-instrumentator
@@ -972,6 +1011,7 @@ Instrumentator().instrument(app).expose(app)
 ### 6. 备份策略
 
 **数据库备份**:
+
 ```bash
 # PostgreSQL 备份脚本
 #!/bin/bash
@@ -990,6 +1030,7 @@ find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
 ```
 
 **定时任务**:
+
 ```bash
 # 添加到 crontab
 crontab -e
@@ -1026,17 +1067,20 @@ LOG_LEVEL=WARNING
 恭喜！您已成功部署 LLM 管理平台。
 
 **快速链接**:
-- 📱 前端应用: http://localhost:5173
-- 📚 API 文档: http://localhost:8000/docs
-- 📊 健康检查: http://localhost:8000/health
+
+- 📱 前端应用: <http://localhost:5173>
+- 📚 API 文档: <http://localhost:8000/docs>
+- 📊 健康检查: <http://localhost:8000/health>
 
 **下一步**:
+
 1. 创建管理员账号
 2. 添加 LLM API Keys
 3. 开始使用聊天功能
 4. 查看使用统计
 
 **需要帮助？**
+
 - 查看 [QUICKSTART.md](./QUICKSTART.md) 了解快速开始
 - 查看 [开发文档.md](./开发文档.md) 了解更多功能
 - 访问 [GitHub Issues](https://github.com/Ran-qiu/LLM/issues) 报告问题
