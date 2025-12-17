@@ -1,81 +1,85 @@
 @echo off
-chcp 65001 >nul
 echo.
 echo ========================================
-echo   LLM 管理平台 - 一键启动脚本
+echo   LLM Manager - Quick Start
 echo ========================================
 echo.
 
-REM 检查是否在项目根目录
+REM Check if in project root
 if not exist "backend" (
-    echo [错误] 请在项目根目录运行此脚本！
-    echo 当前目录: %CD%
+    echo [ERROR] Please run this script in project root directory!
+    echo Current directory: %CD%
     pause
     exit /b 1
 )
 
-echo [1/5] 检查环境...
+REM Save root directory
+set ROOT_DIR=%CD%
+
+echo [1/5] Checking environment...
 echo.
 
-REM 检查 Python
+REM Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未检测到 Python！
-    echo 请先安装 Python 3.9+ : https://www.python.org/downloads/
+    echo [ERROR] Python not found!
+    echo Please install Python 3.9+: https://www.python.org/downloads/
     pause
     exit /b 1
 )
-echo ✓ Python 已安装
+echo [OK] Python installed
 
-REM 检查 Node.js
+REM Check Node.js
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未检测到 Node.js！
-    echo 请先安装 Node.js 18+ : https://nodejs.org/
+    echo [ERROR] Node.js not found!
+    echo Please install Node.js 18+: https://nodejs.org/
     pause
     exit /b 1
 )
-echo ✓ Node.js 已安装
+echo [OK] Node.js installed
 echo.
 
-REM 检查并创建虚拟环境
-echo [2/5] 准备后端环境...
+REM Setup backend
+echo [2/5] Setting up backend...
 cd backend
 
+REM Save backend directory path
+set BACKEND_DIR=%CD%
+
 if not exist "venv" (
-    echo 创建 Python 虚拟环境...
+    echo Creating Python virtual environment...
     python -m venv venv
     if errorlevel 1 (
-        echo [错误] 虚拟环境创建失败！
+        echo [ERROR] Failed to create virtual environment!
         pause
         exit /b 1
     )
 )
 
-REM 激活虚拟环境
+REM Activate venv
 call venv\Scripts\activate
 
-REM 检查依赖
+REM Check dependencies
 pip show fastapi >nul 2>&1
 if errorlevel 1 (
-    echo 首次运行，正在安装后端依赖...
-    echo 这可能需要几分钟，请耐心等待...
+    echo Installing backend dependencies (this may take a few minutes)...
     pip install --upgrade pip >nul 2>&1
     pip install -r requirements.txt
     if errorlevel 1 (
-        echo [错误] 依赖安装失败！
+        echo [ERROR] Failed to install dependencies!
         pause
         exit /b 1
     )
-    echo ✓ 后端依赖安装完成
+    echo [OK] Backend dependencies installed
 ) else (
-    echo ✓ 后端依赖已安装
+    echo [OK] Backend dependencies already installed
 )
 echo.
 
-REM 检查并创建 .env
+REM Create .env if not exists
 if not exist ".env" (
-    echo 创建后端配置文件...
+    echo Creating backend config file...
     if exist ".env.example" (
         copy .env.example .env >nul
     ) else (
@@ -85,96 +89,100 @@ if not exist ".env" (
         echo ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000 >> .env
         echo LOG_LEVEL=INFO >> .env
     )
-    echo ✓ 配置文件已创建
+    echo [OK] Config file created
 )
 
-REM 检查数据库
+REM Initialize database
 if not exist "data\llm_manager.db" (
-    echo [3/5] 初始化数据库...
+    echo [3/5] Initializing database...
     mkdir data 2>nul
     alembic upgrade head
     if errorlevel 1 (
-        echo [警告] 数据库迁移失败，将在启动时自动创建
+        echo [WARNING] Database migration failed, will be created on startup
     ) else (
-        echo ✓ 数据库初始化完成
+        echo [OK] Database initialized
     )
 ) else (
-    echo [3/5] ✓ 数据库已存在
+    echo [3/5] [OK] Database already exists
 )
 echo.
 
-REM 启动后端
-echo [4/5] 启动后端服务...
-echo 后端将在 http://localhost:8000 运行
-echo API 文档: http://localhost:8000/docs
+REM Start backend
+echo [4/5] Starting backend service...
+echo Backend will run at http://localhost:8000
+echo API docs at http://localhost:8000/docs
 echo.
-start "LLM后端" cmd /k "cd /d %CD% && venv\Scripts\activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+start "LLM-Backend" cmd /k "cd /d "%BACKEND_DIR%" && call venv\Scripts\activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
 
-REM 等待后端启动
-echo 等待后端服务启动...
+REM Wait for backend
+echo Waiting for backend to start...
 timeout /t 5 /nobreak >nul
 
-cd ..
+cd "%ROOT_DIR%"
 
-REM 检查前端依赖
-echo [5/5] 准备前端环境...
+REM Setup frontend
+echo [5/5] Setting up frontend...
 cd frontend
 
+REM Save frontend directory path
+set FRONTEND_DIR=%CD%
+
 if not exist "node_modules" (
-    echo 首次运行，正在安装前端依赖...
-    echo 这可能需要几分钟，请耐心等待...
+    echo Installing frontend dependencies (this may take a few minutes)...
     call npm install
     if errorlevel 1 (
-        echo [错误] 前端依赖安装失败！
+        echo [ERROR] Failed to install frontend dependencies!
         pause
         exit /b 1
     )
-    echo ✓ 前端依赖安装完成
+    echo [OK] Frontend dependencies installed
 ) else (
-    echo ✓ 前端依赖已安装
+    echo [OK] Frontend dependencies already installed
 )
 echo.
 
-REM 检查并创建前端 .env
+REM Create frontend .env
 if not exist ".env" (
-    echo 创建前端配置文件...
+    echo Creating frontend config file...
     if exist ".env.example" (
         copy .env.example .env >nul
     ) else (
         echo VITE_API_BASE_URL=http://localhost:8000/api/v1 > .env
-        echo VITE_APP_TITLE=LLM 管理平台 >> .env
+        echo VITE_APP_TITLE=LLM Manager >> .env
     )
-    echo ✓ 前端配置文件已创建
+    echo [OK] Frontend config created
 )
 
-REM 启动前端
-echo 启动前端服务...
-echo 前端将在 http://localhost:5173 运行
+REM Start frontend
+echo Starting frontend service...
+echo Frontend will run at http://localhost:5173
 echo.
-start "LLM前端" cmd /k "cd /d %CD% && npm run dev"
+start "LLM-Frontend" cmd /k "cd /d "%FRONTEND_DIR%" && npm run dev"
 
-REM 等待前端启动
+REM Wait for frontend
 timeout /t 3 /nobreak >nul
 
-echo.
-echo ========================================
-echo   🎉 启动完成！
-echo ========================================
-echo.
-echo 📱 前端地址: http://localhost:5173
-echo 📚 API文档:  http://localhost:8000/docs
-echo.
-echo 💡 提示:
-echo   - 两个命令窗口会自动打开（后端和前端）
-echo   - 关闭这些窗口即可停止服务
-echo   - 下次启动只需双击此脚本即可
-echo.
-echo 按任意键打开浏览器...
-pause >nul
+cd "%ROOT_DIR%"
 
-REM 打开浏览器
+echo.
+echo ========================================
+echo   SUCCESS!
+echo ========================================
+echo.
+echo Frontend: http://localhost:5173
+echo API Docs: http://localhost:8000/docs
+echo.
+echo Tips:
+echo   - Two command windows will open (backend and frontend)
+echo   - Close those windows to stop the services
+echo   - Next time just double-click this script
+echo.
+echo Opening browser in 3 seconds...
+timeout /t 3 /nobreak >nul
+
+REM Open browser
 start http://localhost:5173
 
 echo.
-echo 按任意键关闭此窗口...
+echo Press any key to close this window...
 pause >nul
