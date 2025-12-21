@@ -4,7 +4,7 @@ import { Template, TemplateCreate, TemplateUpdate, TemplateUsageRequest, Convers
 export const templateService = {
   // Get all templates (user's private + public)
   getTemplates: async (params?: PaginationParams) => {
-    const response = await api.get<Template[]>('/templates', { params })
+    const response = await api.get<Template[]>('/templates/me', { params })
     return response.data
   },
 

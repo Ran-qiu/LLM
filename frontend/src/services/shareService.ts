@@ -4,7 +4,7 @@ import { Share, ShareCreate, ShareUpdate, ShareAccessRequest, Conversation, Mess
 export const shareService = {
   // Get all shares
   getShares: async (params?: PaginationParams) => {
-    const response = await api.get<Share[]>('/shares', { params })
+    const response = await api.get<Share[]>('/shares/me', { params })
     return response.data
   },
 

@@ -30,7 +30,7 @@ class StatisticsService:
             days: Number of days to include in statistics
 
         Returns:
-            Dictionary with statistics
+            Dictionary with statistics matching frontend interface
         """
         # Calculate date range
         end_date = datetime.utcnow()
@@ -41,24 +41,16 @@ class StatisticsService:
             Conversation.user_id == user_id
         ).scalar() or 0
 
-        recent_conversations = db.query(func.count(Conversation.id)).filter(
-            Conversation.user_id == user_id,
-            Conversation.created_at >= start_date
-        ).scalar() or 0
-
         # Get message count and token usage
         message_stats = db.query(
             func.count(Message.id).label("count"),
-            func.sum(Message.prompt_tokens).label("prompt_tokens"),
-            func.sum(Message.completion_tokens).label("completion_tokens"),
             func.sum(Message.total_tokens).label("total_tokens"),
             func.sum(Message.cost).label("total_cost")
         ).join(
             Conversation,
             Message.conversation_id == Conversation.id
         ).filter(
-            Conversation.user_id == user_id,
-            Message.created_at >= start_date
+            Conversation.user_id == user_id
         ).first()
 
         # Get API key count
@@ -70,6 +62,7 @@ class StatisticsService:
         # Get usage by provider
         provider_stats = db.query(
             APIKey.provider,
+            func.count(Conversation.id).label("conversation_count"),
             func.count(Message.id).label("message_count"),
             func.sum(Message.total_tokens).label("total_tokens"),
             func.sum(Message.cost).label("total_cost")
@@ -89,6 +82,7 @@ class StatisticsService:
         # Get usage by model
         model_stats = db.query(
             Conversation.model,
+            func.count(Conversation.id).label("conversation_count"),
             func.count(Message.id).label("message_count"),
             func.sum(Message.total_tokens).label("total_tokens"),
             func.sum(Message.cost).label("total_cost")
@@ -122,48 +116,42 @@ class StatisticsService:
 
         logger.info(f"Generated statistics for user {user_id} (last {days} days)")
 
+        # Format by_provider as Record
+        by_provider = {}
+        for stat in provider_stats:
+            by_provider[stat.provider] = {
+                "conversations": stat.conversation_count,
+                "messages": stat.message_count,
+                "tokens": stat.total_tokens or 0,
+                "cost": float(stat.total_cost or 0),
+            }
+
+        # Format by_model as Record
+        by_model = {}
+        for stat in model_stats:
+            by_model[stat.model] = {
+                "conversations": stat.conversation_count,
+                "messages": stat.message_count,
+                "tokens": stat.total_tokens or 0,
+                "cost": float(stat.total_cost or 0),
+            }
+
         return {
-            "period": {
-                "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat(),
-                "days": days
-            },
-            "overview": {
+            "summary": {
                 "total_conversations": total_conversations,
-                "recent_conversations": recent_conversations,
                 "total_messages": message_stats.count or 0,
-                "active_api_keys": api_key_count,
-            },
-            "usage": {
-                "prompt_tokens": message_stats.prompt_tokens or 0,
-                "completion_tokens": message_stats.completion_tokens or 0,
                 "total_tokens": message_stats.total_tokens or 0,
                 "total_cost": float(message_stats.total_cost or 0),
+                "active_api_keys": api_key_count,
             },
-            "by_provider": [
-                {
-                    "provider": stat.provider,
-                    "message_count": stat.message_count,
-                    "total_tokens": stat.total_tokens or 0,
-                    "total_cost": float(stat.total_cost or 0),
-                }
-                for stat in provider_stats
-            ],
-            "by_model": [
-                {
-                    "model": stat.model,
-                    "message_count": stat.message_count,
-                    "total_tokens": stat.total_tokens or 0,
-                    "total_cost": float(stat.total_cost or 0),
-                }
-                for stat in model_stats
-            ],
-            "daily": [
+            "by_provider": by_provider,
+            "by_model": by_model,
+            "by_date": [
                 {
                     "date": stat.date.isoformat() if hasattr(stat.date, 'isoformat') else str(stat.date),
-                    "message_count": stat.message_count,
-                    "total_tokens": stat.total_tokens or 0,
-                    "total_cost": float(stat.total_cost or 0),
+                    "messages": stat.message_count,
+                    "tokens": stat.total_tokens or 0,
+                    "cost": float(stat.total_cost or 0),
                 }
                 for stat in daily_stats
             ]

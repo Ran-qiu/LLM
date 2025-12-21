@@ -131,7 +131,8 @@ function MessageItem({ message }: MessageItemProps) {
               <div className="markdown-body">
                 <ReactMarkdown
                   components={{
-                    code({ node, inline, className, children, ...props }) {
+                    code({ className, children, ...props }: any) {
+                      const inline = !(props as any).node?.position
                       return inline ? (
                         <code
                           className={className}

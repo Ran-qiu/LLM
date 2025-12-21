@@ -130,3 +130,65 @@ async def get_models_by_provider_type(provider: str):
         "models": known_models[provider_lower],
         "note": "These are known models. Actual availability may vary. Use /{api_key_id}/models for accurate list."
     }
+
+
+@router.get("/available")
+async def get_available_models():
+    """
+    Get all available models across all providers.
+    
+    Returns a flattened list of all known models.
+    """
+    known_models = {
+        "openai": [
+            "gpt-4",
+            "gpt-4-turbo",
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-3.5-turbo"
+        ],
+        "claude": [
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307",
+            "claude-3-5-sonnet-20241022"
+        ],
+        "anthropic": [
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307",
+            "claude-3-5-sonnet-20241022"
+        ],
+        "gemini": [
+            "gemini-pro",
+            "gemini-pro-vision",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash"
+        ],
+        "google": [
+            "gemini-pro",
+            "gemini-pro-vision",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash"
+        ],
+        "ollama": [
+            "llama3",
+            "llama3:70b",
+            "mistral",
+            "mixtral",
+            "qwen2",
+            "gemma2",
+            "phi3"
+        ]
+    }
+    
+    all_models = []
+    for provider, models in known_models.items():
+        for model in models:
+            all_models.append({
+                "provider": provider,
+                "model": model,
+                "display_name": f"{provider.capitalize()} - {model}"
+            })
+            
+    return all_models

@@ -1,9 +1,22 @@
-from typing import List, Optional
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from typing import List, Optional, Union, Annotated
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BeforeValidator
+
+
+def parse_cors_origins(v: Union[str, List[str]]) -> List[str]:
+    if isinstance(v, str) and not v.startswith("["):
+        return [i.strip() for i in v.split(",")]
+    elif isinstance(v, list):
+        return v
+    return v
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_parse_none_str='null'
+    )
+
     # Project
     PROJECT_NAME: str = "LLM Manager"
     VERSION: str = "1.0.0"
@@ -19,34 +32,18 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./data/llm.db"
 
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:80"]
-
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v: str | List[str]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    BACKEND_CORS_ORIGINS: Annotated[
+        List[str],
+        BeforeValidator(parse_cors_origins)
+    ] = ["http://localhost:5173", "http://localhost:80"]
 
     # Ollama
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-
-    # n8n
-    N8N_ENABLED: bool = True
-    N8N_API_URL: str = "http://localhost:5678/api/v1"
-    N8N_API_TOKEN: Optional[str] = None
-    N8N_WEBHOOK_URL: str = "http://localhost:5678/webhook"
 
     # LLM Providers
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 settings = Settings()

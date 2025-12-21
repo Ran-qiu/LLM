@@ -9,6 +9,7 @@ import { TagManagement } from './components/Tags'
 import { ShareManagement } from './components/Shares'
 import { TemplateManagement } from './components/Templates'
 import { StatisticsPage } from './components/Statistics'
+import Settings from './pages/Settings'
 import './App.css'
 
 function App() {
@@ -94,7 +95,7 @@ function App() {
             element={
               <PrivateRoute>
                 <MainLayout>
-                  <div>Settings - Coming Soon</div>
+                  <Settings />
                 </MainLayout>
               </PrivateRoute>
             }

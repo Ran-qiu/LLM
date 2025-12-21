@@ -1,5 +1,5 @@
 from typing import List, Optional, AsyncIterator
-import ollama
+from openai import AsyncOpenAI
 
 from app.adapters.base_adapter import (
     BaseLLMAdapter,
@@ -13,7 +13,12 @@ logger = get_logger("ollama_adapter")
 
 
 class OllamaAdapter(BaseLLMAdapter):
-    """Adapter for Ollama local models"""
+    """
+    Adapter for Ollama local models using OpenAI-compatible SDK.
+    
+    This provides better consistency and unified handling for all 
+    OpenAI-compatible local and remote services.
+    """
 
     def __init__(self, base_url: Optional[str] = None, **kwargs):
         """
@@ -23,10 +28,21 @@ class OllamaAdapter(BaseLLMAdapter):
             base_url: Ollama server URL (default: from settings)
             **kwargs: Additional configuration
         """
-        super().__init__(api_key=None, **kwargs)  # Ollama doesn't need API key
-        self.base_url = base_url or settings.OLLAMA_BASE_URL
-        self.client = ollama.AsyncClient(host=self.base_url)
-        logger.info(f"Ollama adapter initialized: {self.base_url}")
+        # Ollama doesn't need a real API key for local usage, but OpenAI SDK requires one
+        super().__init__(api_key="ollama", **kwargs)
+        
+        # Ensure base_url ends with /v1 for OpenAI SDK compatibility
+        raw_url = base_url or settings.OLLAMA_BASE_URL
+        if not raw_url.endswith('/v1'):
+            self.base_url = f"{raw_url.rstrip('/')}/v1"
+        else:
+            self.base_url = raw_url
+
+        self.client = AsyncOpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
+        logger.info(f"Ollama adapter initialized via OpenAI SDK: {self.base_url}")
 
     async def chat(
         self,
@@ -36,36 +52,31 @@ class OllamaAdapter(BaseLLMAdapter):
         max_tokens: Optional[int] = None,
         **kwargs
     ) -> ChatCompletionResponse:
-        """Send chat completion request to Ollama."""
+        """Send chat completion request to Ollama via OpenAI SDK."""
         try:
             formatted_messages = self._format_messages(messages)
 
-            options = {
-                "temperature": temperature,
-            }
-            if max_tokens:
-                options["num_predict"] = max_tokens
-
-            response = await self.client.chat(
+            response = await self.client.chat.completions.create(
                 model=model,
                 messages=formatted_messages,
-                options=options,
+                temperature=temperature,
+                max_tokens=max_tokens,
                 **kwargs
             )
 
-            content = response["message"]["content"]
+            content = response.choices[0].message.content
 
-            # Ollama provides token counts
+            # Extract usage info
             usage = None
-            if "prompt_eval_count" in response:
+            if response.usage:
                 usage = {
-                    "prompt_tokens": response.get("prompt_eval_count", 0),
-                    "completion_tokens": response.get("eval_count", 0),
-                    "total_tokens": response.get("prompt_eval_count", 0) + response.get("eval_count", 0),
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens,
                 }
 
             logger.info(
-                f"Ollama chat completed: model={model}, "
+                f"Ollama(OpenAI) chat completed: model={model}, "
                 f"tokens={usage['total_tokens'] if usage else 'unknown'}"
             )
 
@@ -73,15 +84,14 @@ class OllamaAdapter(BaseLLMAdapter):
                 content=content,
                 model=model,
                 usage=usage,
-                finish_reason="stop",
+                finish_reason=response.choices[0].finish_reason,
                 metadata={
-                    "eval_duration": response.get("eval_duration"),
-                    "load_duration": response.get("load_duration"),
+                    "base_url": self.base_url
                 }
             )
 
         except Exception as e:
-            logger.error(f"Ollama chat error: {str(e)}")
+            logger.error(f"Ollama(OpenAI) chat error: {str(e)}")
             raise
 
     async def stream_chat(
@@ -92,94 +102,47 @@ class OllamaAdapter(BaseLLMAdapter):
         max_tokens: Optional[int] = None,
         **kwargs
     ) -> AsyncIterator[str]:
-        """Send streaming chat completion request to Ollama."""
+        """Send streaming chat completion request to Ollama via OpenAI SDK."""
         try:
             formatted_messages = self._format_messages(messages)
 
-            options = {
-                "temperature": temperature,
-            }
-            if max_tokens:
-                options["num_predict"] = max_tokens
-
-            logger.info(f"Ollama stream chat started: model={model}")
-
-            stream = await self.client.chat(
+            stream = await self.client.chat.completions.create(
                 model=model,
                 messages=formatted_messages,
-                options=options,
+                temperature=temperature,
+                max_tokens=max_tokens,
                 stream=True,
                 **kwargs
             )
 
+            logger.info(f"Ollama(OpenAI) stream chat started: model={model}")
+
             async for chunk in stream:
-                if "message" in chunk and "content" in chunk["message"]:
-                    yield chunk["message"]["content"]
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
 
         except Exception as e:
-            logger.error(f"Ollama stream chat error: {str(e)}")
+            logger.error(f"Ollama(OpenAI) stream chat error: {str(e)}")
             raise
 
     async def get_models(self) -> List[str]:
-        """Get list of available Ollama models."""
+        """Get list of available Ollama models via OpenAI SDK."""
         try:
-            response = await self.client.list()
-            models = [model["name"] for model in response.get("models", [])]
+            # Note: Not all Ollama versions support /v1/models yet
+            response = await self.client.models.list()
+            models = [model.id for model in response.data]
             logger.info(f"Retrieved {len(models)} Ollama models")
             return models
         except Exception as e:
-            logger.error(f"Failed to get Ollama models: {str(e)}")
-            raise
+            logger.warning(f"Failed to get Ollama models via /v1/models: {str(e)}")
+            # Fallback or return empty list
+            return []
 
     def validate_config(self) -> bool:
         """Validate Ollama adapter configuration."""
         if not self.base_url:
             raise ValueError("Ollama base URL is required")
         return True
-
-    async def pull_model(self, model: str) -> bool:
-        """
-        Pull a model from Ollama registry.
-
-        Args:
-            model: Model name to pull
-
-        Returns:
-            True if successful
-
-        Raises:
-            Exception: If pull fails
-        """
-        try:
-            logger.info(f"Pulling Ollama model: {model}")
-            await self.client.pull(model)
-            logger.info(f"Successfully pulled model: {model}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to pull model {model}: {str(e)}")
-            raise
-
-    async def delete_model(self, model: str) -> bool:
-        """
-        Delete a model from Ollama.
-
-        Args:
-            model: Model name to delete
-
-        Returns:
-            True if successful
-
-        Raises:
-            Exception: If delete fails
-        """
-        try:
-            logger.info(f"Deleting Ollama model: {model}")
-            await self.client.delete(model)
-            logger.info(f"Successfully deleted model: {model}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to delete model {model}: {str(e)}")
-            raise
 
     def _calculate_cost(
         self,

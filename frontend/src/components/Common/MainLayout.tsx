@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Layout as AntLayout, Menu, Dropdown, Avatar, Button } from 'antd'
+import { Layout as AntLayout, Menu, Dropdown, Avatar } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   MessageOutlined,

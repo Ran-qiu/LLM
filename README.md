@@ -1,143 +1,115 @@
 # LLM 统一管理平台
 
-一个本地部署的大语言模型统一管理平台，支持多个主流LLM厂商的API调用，提供完整的对话管理和历史记录功能。
+一个专注于本地化的大语言模型统一管理平台，支持 Ollama、OpenAI 兼容接口以及自定义网关。
 
-## 项目特点
+## 核心功能
 
-- **多厂商支持**：统一接口调用 OpenAI、Claude、Gemini、通义千问等11+主流大模型
-- **Ollama集成**：完整支持本地部署的开源模型（Llama 3、Mistral、Qwen等）
-- **LangChain增强**：利用LangChain强大能力，支持对话记忆、工具调用、Agent等高级功能
-- **自定义模型**：支持任何兼容OpenAI API格式的模型服务（OneAPI、vLLM、FastChat等）
-- **n8n工作流**：集成n8n实现LLM自动化编排、定时任务、Webhook触发等场景
-- **本地部署**：数据完全本地存储，保护隐私安全
-- **用户友好**：现代化的Web界面，流畅的对话体验
-- **完整功能**：用户认证、对话管理、历史记录、灵活的API密钥管理
-- **易于部署**：Docker一键部署，开箱即用
+- **Ollama 深度集成**：完整支持本地部署的开源模型（Llama 3, Mistral, Qwen 等），支持流式对话。
+- **本地 API 支持**：支持任何兼容 OpenAI API 格式的本地服务（如 vLLM, FastChat, LocalAI 等）。
+- **自托管网关**：内置网关适配器模式，可作为统一入口管理多个下游模型服务。
+- **多厂商支持**：除了本地模型，也支持 OpenAI, Claude, Gemini 等主流云端 API。
+- **数据隐私**：对话记录和配置完全本地存储（SQLite），保护您的数据安全。
+- **现代化界面**：React + TypeScript 构建的响应式 Web 界面。
 
 ## 技术栈
 
 - **前端**: React 18 + TypeScript + Vite + Ant Design
 - **后端**: Python 3.10+ + FastAPI + SQLAlchemy
-- **LLM集成**: LangChain + Ollama + 原生SDK（OpenAI、Anthropic等）
-- **工作流引擎**: n8n（自动化编排）
+- **LLM 引擎**: Ollama + OpenAI SDK (兼容协议)
 - **数据库**: SQLite
 - **部署**: Docker + Docker Compose
 
-## 支持的LLM厂商
-
-### 云端API厂商
-
-- OpenAI (GPT-4, GPT-3.5)
-- Anthropic (Claude 3.5 Sonnet, Claude 3 Opus)
-- Google (Gemini Pro, Gemini Ultra)
-- 阿里云通义千问
-- 百度文心一言
-- 智谱AI (ChatGLM)
-- 讯飞星火
-- 月之暗面 (Moonshot/Kimi)
-- 腾讯混元
-- DeepSeek
-
-### 本地部署
-
-- **Ollama**: 支持 Llama 3、Mistral、Qwen、CodeLlama、Phi 等多种开源模型
-
-### 自定义服务
-
-- 任何兼容 OpenAI API 格式的服务
-- OneAPI 多模型聚合网关
-- vLLM 高性能推理引擎
-- FastChat 模型服务
-- Text Generation Inference
-- LocalAI
-
 ## 快速开始
 
-### 使用Docker（推荐）
+### 方式一：Docker 一键部署（推荐）
 
-```bash
-# 克隆项目
-git clone <repository-url>
-cd LLM
+最简单的运行方式，包含后端、前端和 Ollama 服务。
 
-# 配置环境变量
-cp backend/.env.example backend/.env
-# 编辑 backend/.env 文件，设置必要的配置
+1. **准备环境**
+   确保已安装 Docker 和 Docker Compose。
 
-# 启动服务（包含所有组件）
-docker-compose up -d
+2. **启动服务**
 
-# 访问应用
-# 前端: http://localhost:80
-# 后端API: http://localhost:8000
-# API文档: http://localhost:8000/docs
-# n8n工作流: http://localhost:5678 (默认用户名: admin, 密码: changeme123)
-# Ollama API: http://localhost:11434 (如果启用)
-```
+   ```bash
+   cd LLM
+   docker-compose up -d
+   ```
 
-### 本地开发
+3. **访问应用**
+   - **Web 界面**: <http://localhost:5173> (或 <http://localhost:80>)
+   - **后端 API**: <http://localhost:8000>
+   - **API 文档**: <http://localhost:8000/docs>
+   - **Ollama**: <http://localhost:11434> (服务内置)
 
-#### 后端启动
+### 方式二：本地开发部署
 
-```bash
-cd backend
+如果您想在本地运行源码（Windows 环境示例）。
+
+#### 1. 后端 (Backend)
+
+```powershell
+cd LLM/backend
+
+# 创建虚拟环境
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 激活虚拟环境
+.\venv\Scripts\activate
+
+# 安装依赖
 pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# 初始化数据库
+alembic upgrade head
+
+# 启动服务
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-#### 前端启动
+#### 2. 前端 (Frontend)
 
-```bash
-cd frontend
+```powershell
+cd LLM/frontend
+
+# 安装依赖
 npm install
+
+# 启动开发服务器
 npm run dev
 ```
 
-## 项目文档
+#### 3. Ollama (可选)
 
-详细的开发文档请查看：[开发文档.md](./开发文档.md)
+如果您没有使用 Docker 启动 Ollama，请确保您已在本地安装并运行了 Ollama：
 
-文档包含：
+- 下载安装: <https://ollama.com/>
+- 启动服务: `ollama serve`
+- 拉取模型: `ollama pull llama3`
 
-- 完整的系统架构设计（包含 n8n 工作流引擎）
-- 功能模块详细说明
-- 数据库设计（支持自定义模型配置）
-- API接口文档
-- **Ollama 集成指南**（安装、配置、使用）
-- **LangChain 集成指南**（对话记忆、工具调用、Agent）
-- **自定义模型集成指南**（OneAPI、vLLM等）
-- **n8n 工作流自动化指南**（定时任务、Webhook、批处理、工作流模板）
-- 分阶段开发计划
-- 部署指南
-- 安全性考虑
+## 功能指南
 
-## 项目状态
+### 自托管网关 (Gateway)
 
-当前状态：**开发中**
+平台支持 "Gateway" 模式，允许您连接到任何兼容 OpenAI 接口的服务。这对于使用 OneAPI、vLLM 或其他聚合网关非常有用。
 
-- [x] 项目初始化
-- [x] 开发文档编写
-- [ ] 基础框架搭建
-- [ ] 用户认证系统
-- [ ] LLM适配器实现
-- [ ] 对话功能实现
-- [ ] 历史记录功能
-- [ ] Docker化部署
+**配置示例：**
 
-## 贡献指南
+- **Provider**: Gateway (或 Custom)
+- **Base URL**: `http://localhost:8080/v1` (您的网关地址)
+- **API Key**: `sk-xxxx` (您的网关密钥)
+- **Model Type**: `openai-compatible`
 
-欢迎贡献代码、报告问题或提出建议。请确保：
+### Ollama 集成
 
-- 遵循项目的代码规范
-- 编写必要的测试
-- 提交前运行测试确保通过
+系统会自动检测配置的 Ollama 地址（默认为 `http://localhost:11434`）。
+
+- 在设置中选择 "Ollama" 提供商。
+- 系统会自动列出您已拉取的模型。
+
+## 贡献
+
+欢迎提交 Pull Request 或 Issue。
 
 ## 许可证
 
-[待定]
-
-## 联系方式
-
-如有问题或建议，请提交 Issue。
+MIT License

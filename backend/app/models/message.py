@@ -22,7 +22,7 @@ class Message(Base):
     cost = Column(Float, nullable=True)  # Estimated cost in USD
 
     # Additional metadata
-    metadata = Column(JSON, nullable=True)  # Store model-specific data, tool calls, etc.
+    message_metadata = Column(JSON, nullable=True)  # Store model-specific data, tool calls, etc.
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

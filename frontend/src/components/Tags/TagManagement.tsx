@@ -23,7 +23,6 @@ import { tagService } from '../../services'
 import type { Tag, TagCreate, TagUpdate } from '../../types'
 import { formatDate, getRandomColor } from '../../utils/format'
 import type { ColumnsType } from 'antd/es/table'
-import type { Color } from 'antd/es/color-picker'
 
 const { Title } = Typography
 

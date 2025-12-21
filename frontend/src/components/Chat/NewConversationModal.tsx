@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Select, message } from 'antd'
+import { Modal, Form, Input, Select, AutoComplete, message } from 'antd'
 import { useState, useEffect } from 'react'
 import { apiKeyService } from '../../services'
 import { useChatStore } from '../../store/chatStore'
@@ -65,13 +65,16 @@ export default function NewConversationModal({ visible, onClose }: NewConversati
     if (!apiKey) return []
 
     const modelsByProvider: Record<string, string[]> = {
-      openai: ['gpt-4', 'gpt-4-turbo-preview', 'gpt-3.5-turbo'],
-      anthropic: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
-      google: ['gemini-pro', 'gemini-pro-vision'],
-      ollama: ['llama2', 'mistral', 'codellama'],
+      openai: ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+      claude: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20241022'],
+      anthropic: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20241022'],
+      google: ['gemini-pro', 'gemini-pro-vision', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+      gemini: ['gemini-pro', 'gemini-pro-vision', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+      ollama: ['llama3', 'llama3:70b', 'mistral', 'mixtral', 'qwen2', 'gemma2', 'phi3'],
     }
 
-    return modelsByProvider[apiKey.provider] || []
+    // Default to empty array but allow custom input in UI
+    return modelsByProvider[apiKey.provider.toLowerCase()] || []
   }
 
   return (
@@ -125,15 +128,19 @@ export default function NewConversationModal({ visible, onClose }: NewConversati
               <Form.Item
                 name="model"
                 label="模型"
-                rules={[{ required: true, message: '请选择模型' }]}
+                rules={[{ required: true, message: '请选择或输入模型' }]}
+                help="您可以从列表中选择，也可以直接输入自定义模型名称"
               >
-                <Select
-                  placeholder="选择模型"
+                <AutoComplete
+                  placeholder="选择或输入模型名称"
                   disabled={!apiKeyId}
                   options={models.map((model) => ({
                     value: model,
                     label: model,
                   }))}
+                  filterOption={(inputValue, option) =>
+                    option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                  }
                 />
               </Form.Item>
             )

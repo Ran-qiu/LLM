@@ -25,6 +25,12 @@ export interface UserLogin {
   password: string
 }
 
+export interface UserUpdate {
+  email?: string
+  full_name?: string
+  password?: string
+}
+
 export interface TokenResponse {
   access_token: string
   token_type: string

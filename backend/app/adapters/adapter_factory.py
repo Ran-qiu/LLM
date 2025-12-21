@@ -62,11 +62,11 @@ class AdapterFactory:
                     base_url = custom_config["base_url"]
                 return OllamaAdapter(base_url=base_url)
 
-            elif provider_lower == "custom":
+            elif provider_lower == "custom" or provider_lower == "gateway":
                 if not api_key:
-                    raise ValueError("Custom adapter requires an API key")
+                    raise ValueError("Custom/Gateway adapter requires an API key")
                 if not custom_config or "base_url" not in custom_config:
-                    raise ValueError("Custom adapter requires base_url in config")
+                    raise ValueError("Custom/Gateway adapter requires base_url in config")
 
                 return CustomAdapter(
                     api_key=api_key,
@@ -115,4 +115,4 @@ class AdapterFactory:
     @staticmethod
     def get_supported_providers() -> list[str]:
         """Get list of supported providers."""
-        return ["openai", "claude", "anthropic", "gemini", "google", "ollama", "custom"]
+        return ["openai", "claude", "anthropic", "gemini", "google", "ollama", "custom", "gateway"]
