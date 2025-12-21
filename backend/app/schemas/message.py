@@ -25,7 +25,7 @@ class MessageInDB(MessageBase):
     completion_tokens: Optional[int]
     total_tokens: Optional[int]
     cost: Optional[float]
-    metadata: Optional[Dict[str, Any]]
+    message_metadata: Optional[Dict[str, Any]] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -40,7 +40,7 @@ class MessageResponse(BaseModel):
     completion_tokens: Optional[int]
     total_tokens: Optional[int]
     cost: Optional[float]
-    metadata: Optional[Dict[str, Any]]
+    message_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="metadata")
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -48,7 +48,7 @@ class MessageResponse(BaseModel):
 
 # For chat completion requests
 class ChatCompletionRequest(BaseModel):
-    conversation_id: int
+    conversation_id: Optional[int] = None
     message: str = Field(..., description="User message")
     stream: bool = Field(default=False, description="Whether to stream the response")
 

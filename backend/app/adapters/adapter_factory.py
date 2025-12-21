@@ -68,11 +68,19 @@ class AdapterFactory:
                 if not custom_config or "base_url" not in custom_config:
                     raise ValueError("Custom/Gateway adapter requires base_url in config")
 
+                # Remove base_url from config to avoid duplicate argument error
+                # since we pass it explicitly
+                config_copy = custom_config.copy()
+                if "base_url" in config_copy:
+                    del config_copy["base_url"]
+                if "model_type" in config_copy:
+                    del config_copy["model_type"]
+                
                 return CustomAdapter(
                     api_key=api_key,
                     base_url=custom_config["base_url"],
                     model_type=custom_config.get("model_type", "openai-compatible"),
-                    **custom_config
+                    **config_copy
                 )
 
             else:

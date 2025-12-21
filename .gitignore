@@ -29,6 +29,10 @@ ENV/
 logs/
 backend/logs/
 
+# md
+GEMINI.md
+CLAUDE.md
+
 # Database
 *.db
 *.sqlite

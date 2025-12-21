@@ -23,6 +23,7 @@ class APIKey(Base):
 
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
+    rpm_limit = Column(Integer, default=60, nullable=False)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

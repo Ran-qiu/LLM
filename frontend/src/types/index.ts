@@ -47,6 +47,8 @@ export interface APIKey {
   provider: string
   name: string
   is_active: boolean
+  rpm_limit: number
+  custom_config?: Record<string, any>
   last_used_at?: string
   created_at: string
   updated_at: string
@@ -58,6 +60,8 @@ export interface APIKeyCreate {
   api_key: string
   base_url?: string
   model_name?: string
+  rpm_limit?: number
+  custom_config?: Record<string, any>
 }
 
 export interface APIKeyUpdate {
@@ -66,6 +70,8 @@ export interface APIKeyUpdate {
   base_url?: string
   model_name?: string
   is_active?: boolean
+  rpm_limit?: number
+  custom_config?: Record<string, any>
 }
 
 // ==========================================
@@ -142,79 +148,6 @@ export interface TagCreate {
 export interface TagUpdate {
   name?: string
   color?: string
-}
-
-// ==========================================
-// Share Types
-// ==========================================
-
-export interface Share {
-  id: number
-  conversation_id: number
-  user_id: number
-  share_token: string
-  expires_at?: string
-  is_active: boolean
-  access_count: number
-  last_accessed_at?: string
-  created_at: string
-  updated_at: string
-}
-
-export interface ShareCreate {
-  password?: string
-  expires_in_days?: number
-}
-
-export interface ShareUpdate {
-  password?: string
-  expires_at?: string
-  is_active?: boolean
-}
-
-export interface ShareAccessRequest {
-  password?: string
-}
-
-// ==========================================
-// Template Types
-// ==========================================
-
-export interface Template {
-  id: number
-  user_id: number
-  name: string
-  description?: string
-  title_template: string
-  model: string
-  system_prompt?: string
-  is_public: boolean
-  usage_count: number
-  created_at: string
-  updated_at: string
-}
-
-export interface TemplateCreate {
-  name: string
-  description?: string
-  title_template?: string
-  model: string
-  system_prompt?: string
-  is_public?: boolean
-}
-
-export interface TemplateUpdate {
-  name?: string
-  description?: string
-  title_template?: string
-  model?: string
-  system_prompt?: string
-  is_public?: boolean
-}
-
-export interface TemplateUsageRequest {
-  api_key_id: number
-  custom_title?: string
 }
 
 // ==========================================

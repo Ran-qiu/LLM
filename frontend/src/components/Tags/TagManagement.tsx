@@ -9,19 +9,16 @@ import {
   message,
   Space,
   Tag as AntTag,
-  Popconfirm,
   ColorPicker,
   Typography,
 } from 'antd'
 import {
-  PlusOutlined,
   EditOutlined,
-  DeleteOutlined,
   TagsOutlined,
 } from '@ant-design/icons'
 import { tagService } from '../../services'
-import type { Tag, TagCreate, TagUpdate } from '../../types'
-import { formatDate, getRandomColor } from '../../utils/format'
+import type { Tag, TagUpdate } from '../../types'
+import { formatDate } from '../../utils/format'
 import type { ColumnsType } from 'antd/es/table'
 
 const { Title } = Typography
@@ -49,13 +46,6 @@ export default function TagManagement() {
     }
   }
 
-  const handleAdd = () => {
-    setEditingTag(null)
-    form.resetFields()
-    form.setFieldsValue({ color: getRandomColor() })
-    setModalVisible(true)
-  }
-
   const handleEdit = (record: Tag) => {
     setEditingTag(record)
     form.setFieldsValue({
@@ -63,16 +53,6 @@ export default function TagManagement() {
       color: record.color || '#1890ff',
     })
     setModalVisible(true)
-  }
-
-  const handleDelete = async (id: number) => {
-    try {
-      await tagService.deleteTag(id)
-      message.success('删除成功')
-      fetchTags()
-    } catch (error: any) {
-      message.error(error.response?.data?.detail || '删除失败')
-    }
   }
 
   const handleSubmit = async () => {
@@ -87,10 +67,8 @@ export default function TagManagement() {
       if (editingTag) {
         await tagService.updateTag(editingTag.id, data as TagUpdate)
         message.success('更新成功')
-      } else {
-        await tagService.createTag(data as TagCreate)
-        message.success('添加成功')
-      }
+      } 
+      // Removed create logic
 
       setModalVisible(false)
       form.resetFields()
@@ -146,17 +124,6 @@ export default function TagManagement() {
           >
             编辑
           </Button>
-          <Popconfirm
-            title="确定删除此标签吗?"
-            description="删除后将从所有对话中移除"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
         </Space>
       ),
     },
@@ -171,11 +138,7 @@ export default function TagManagement() {
             <Title level={4} style={{ margin: 0 }}>标签管理</Title>
           </Space>
         }
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            添加标签
-          </Button>
-        }
+        // Remove Add button
       >
         <Table
           columns={columns}
@@ -187,7 +150,7 @@ export default function TagManagement() {
       </Card>
 
       <Modal
-        title={editingTag ? '编辑标签' : '添加标签'}
+        title='编辑标签'
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => {
@@ -199,12 +162,8 @@ export default function TagManagement() {
           <Form.Item
             name="name"
             label="标签名称"
-            rules={[
-              { required: true, message: '请输入标签名称' },
-              { max: 50, message: '标签名称最多50个字符' },
-            ]}
           >
-            <Input placeholder="例如: 工作, 学习, 娱乐" />
+            <Input disabled /> 
           </Form.Item>
 
           <Form.Item name="color" label="颜色">

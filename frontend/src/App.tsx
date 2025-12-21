@@ -6,8 +6,6 @@ import { MainLayout } from './components/Common'
 import ChatPage from './components/Chat/ChatPage'
 import { APIKeyManagement } from './components/Models'
 import { TagManagement } from './components/Tags'
-import { ShareManagement } from './components/Shares'
-import { TemplateManagement } from './components/Templates'
 import { StatisticsPage } from './components/Statistics'
 import Settings from './pages/Settings'
 import './App.css'
@@ -56,26 +54,6 @@ function App() {
               <PrivateRoute>
                 <MainLayout>
                   <TagManagement />
-                </MainLayout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/templates"
-            element={
-              <PrivateRoute>
-                <MainLayout>
-                  <TemplateManagement />
-                </MainLayout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/shares"
-            element={
-              <PrivateRoute>
-                <MainLayout>
-                  <ShareManagement />
                 </MainLayout>
               </PrivateRoute>
             }

@@ -6,6 +6,7 @@ from datetime import datetime
 class APIKeyBase(BaseModel):
     provider: str = Field(..., max_length=50, description="LLM provider name (openai, claude, gemini, ollama, custom, etc.)")
     name: str = Field(..., max_length=100, description="User-friendly name for this API key")
+    rpm_limit: int = Field(60, description="Requests per minute limit (0 for unlimited)")
 
 
 class APIKeyCreate(APIKeyBase):
@@ -18,6 +19,7 @@ class APIKeyUpdate(BaseModel):
     api_key: Optional[str] = None
     custom_config: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = None
+    rpm_limit: Optional[int] = None
 
 
 class APIKeyInDB(APIKeyBase):
@@ -38,6 +40,7 @@ class APIKeyResponse(BaseModel):
     provider: str
     name: str
     is_active: bool
+    rpm_limit: int
     custom_config: Optional[Dict[str, Any]]
     created_at: datetime
     last_used_at: Optional[datetime]

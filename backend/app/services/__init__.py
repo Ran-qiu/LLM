@@ -6,8 +6,6 @@ from app.services.conversation_service import ConversationService
 from app.services.api_key_service import APIKeyService
 from app.services.statistics_service import StatisticsService
 from app.services.tag_service import TagService
-from app.services.share_service import ShareService
-from app.services.template_service import TemplateService
 
 __all__ = [
     "AuthService",
@@ -17,6 +15,4 @@ __all__ = [
     "APIKeyService",
     "StatisticsService",
     "TagService",
-    "ShareService",
-    "TemplateService",
 ]

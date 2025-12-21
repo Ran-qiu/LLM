@@ -42,7 +42,8 @@ class APIKeyService:
             name=api_key_data.name,
             encrypted_key=encrypted_key,
             custom_config=api_key_data.custom_config,
-            is_active=True
+            is_active=True,
+            rpm_limit=api_key_data.rpm_limit
         )
 
         db.add(db_api_key)
